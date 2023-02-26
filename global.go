@@ -8,9 +8,6 @@ import (
 )
 
 const (
-	// 表达式结束标志
-	ExprEnd = -1
-
 	// 加密公钥长度
 	PubKeySize = ed25519.PublicKeySize
 )
