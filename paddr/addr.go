@@ -49,6 +49,10 @@ var (
 	ErrInvalidFormat = errors.New(_T("无效的格式：缺失校验码"))
 )
 
+// 公钥地址。
+// 20 或 22 字节长。
+type PKAddr []byte
+
 // Hash 构造公钥哈希地址。
 // 并不检查字节序列长度是否规范，即：支持任意字节数据。
 // 比如构造多重签名公钥地址时，有前置n/T配比字节（此时prefix就有用了）。
@@ -57,10 +61,10 @@ var (
 // 嵌套不同的哈希算法以强化安全，如某个算法被攻破也问题不大。
 // 有限数量人类个体使用20字节的地址空间已经足够，
 // 即便亿亿万一发生碰撞，两个地址应当已相距百年千年，不太可能被盗用。
-func Hash(pubKey, prefix []byte) []byte {
+func Hash(pubKey, prefix []byte) PKAddr {
 	h := sha3.Sum256(pubKey)
 	k := sha256.Sum256(h[:])
-	return chash.BlakeSum160(h[:], k[:HashSize], prefix)
+	return PKAddr(chash.BlakeSum160(h[:], k[:HashSize], prefix))
 }
 
 // MulHash 构造多重签名公钥地址。
@@ -72,7 +76,7 @@ func Hash(pubKey, prefix []byte) []byte {
 // 返回的总公钥地址也前置 n/T 配比（明码）。
 // 注：
 // 详情参考系统设计文档中多重签名地址说明部分。
-func MulHash(pks [][]byte, pkhs [][]byte) ([]byte, error) {
+func MulHash(pks [][]byte, pkhs [][]byte) (PKAddr, error) {
 	n := len(pks)
 	t := len(pkhs) + n
 
@@ -179,7 +183,7 @@ func checksum(fpkh []byte) (cksum [4]byte) {
 // n 为需要的最少签名数量。
 // 各公钥地址串联，前置 n/T 配比后计算哈希。
 // 返回值：总公钥哈希。
-func hashMPKH(pkhs [][]byte, n int) ([]byte, error) {
+func hashMPKH(pkhs [][]byte, n int) (PKAddr, error) {
 	t := len(pkhs)
 	_n := byte(n)
 	_t := byte(t)

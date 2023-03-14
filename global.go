@@ -3,11 +3,7 @@
 
 package cbase
 
-import (
-	"crypto/ed25519"
-)
-
 const (
-	// 加密公钥长度
-	PubKeySize = ed25519.PublicKeySize
+	// 脚本ID长度。
+	KeyIDSize = 20
 )

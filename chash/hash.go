@@ -61,6 +61,7 @@ func BlakeSum160(data, key, pfix []byte) []byte {
 // 返回值：20字节切片。
 // 注记：
 // ver 版本信息为便于升级维护。
+// 嵌入一层SHA2运算作为密钥强化安全。
 func Sum160(ver int, data []byte) []byte {
 	// ver: 1
 	k := sha256.Sum256(data)
