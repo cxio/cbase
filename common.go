@@ -9,7 +9,13 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"regexp"
+
+	"github.com/cxio/script/instor"
 )
+
+// 切片成员类型约束
+type Itemer = instor.Itemer
 
 // 构造脚本ID。
 // 脚本ID用于唯一性地标识一段脚本。
@@ -39,6 +45,48 @@ func KeyID(h, n, i int) []byte {
 // 如果d为零，就是严格相等了。
 func FloatEqual(x, y, d float64) bool {
 	return math.Abs(x-y) <= d
+}
+
+// 将特定类型的切片转为any切片。
+// 确定会返回一个切片，空切片非nil。
+func ToAnys[T Itemer](data []T) []any {
+	buf := make([]any, len(data))
+
+	for i, v := range data {
+		buf[i] = v
+	}
+	return buf
+}
+
+// 查找首个正则匹配。
+// 返回一个切片，其中首个成员为完整匹配，后续为可能有的子匹配。
+// 目标 target 支持字符串或字节序列。
+func Match(target any, re *regexp.Regexp) []any {
+	if x, ok := target.(string); ok {
+		return ToAnys(re.FindStringSubmatch(x))
+	}
+	return ToAnys(re.FindSubmatch(target.([]byte)))
+}
+
+// 查找全部匹配。
+// 仅查找完整匹配的结果，子匹配会被简单忽略。
+// 目标 target 支持字符串或字节序列。
+func MatchAll(target any, re *regexp.Regexp) []any {
+	if x, ok := target.(string); ok {
+		return ToAnys(re.FindAllString(x, -1))
+	}
+	return ToAnys(re.FindAll(target.([]byte), -1))
+}
+
+// 查找所有的匹配。
+// 会检查每一个匹配的子匹配，返回包含每组匹配的子匹配的一个二维切片。
+// 如果子匹配式本身就不存在，每组匹配依然是一个切片结果（即整体依然为二维）。
+// 目标 target 支持字符串或字节序列。
+func MatchEvery(target any, re *regexp.Regexp) []any {
+	if x, ok := target.(string); ok {
+		return ToAnys(re.FindAllStringSubmatch(x, -1))
+	}
+	return ToAnys(re.FindAllSubmatch(target.([]byte), -1))
 }
 
 //
